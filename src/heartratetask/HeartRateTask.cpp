@@ -32,7 +32,7 @@ void HeartRateTask::Work() {
       if (measurementStarted) {
         delay = ppg.deltaTms;
       } else {
-        delay = 100;
+        delay = 25;
       }
     } else {
       delay = portMAX_DELAY;
@@ -71,8 +71,13 @@ void HeartRateTask::Work() {
 
     if (measurementStarted) {
       auto sensorData = heartRateSensor.ReadHrsAls();
-      int8_t ambient = ppg.Preprocess(sensorData.hrs, sensorData.als);
-      int bpm = ppg.HeartRate();
+      // int8_t ambient = ppg.Preprocess(sensorData.hrs, sensorData.als);
+      // int bpm = ppg.HeartRate();
+      int8_t ambient = 0;
+      if (sensorData.als > 1000) {
+        ambient = 1;
+      }
+      int bpm = sensorData.hrs;
 
       // If ambient light detected or a reset requested (bpm < 0)
       if (ambient > 0) {
@@ -110,11 +115,11 @@ void HeartRateTask::PushMessage(HeartRateTask::Messages msg) {
 void HeartRateTask::StartMeasurement() {
   heartRateSensor.Enable();
   ppg.Reset(true);
-  vTaskDelay(100);
+  vTaskDelay(25);
 }
 
 void HeartRateTask::StopMeasurement() {
   heartRateSensor.Disable();
   ppg.Reset(true);
-  vTaskDelay(100);
+  vTaskDelay(25);
 }

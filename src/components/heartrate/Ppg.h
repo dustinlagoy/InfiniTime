@@ -11,13 +11,14 @@
 
 namespace Pinetime {
   namespace Controllers {
+    // enum PpgError { no_valid_peak, peak_too_wide, peak_out_of_range, low_signal_to_noise_ratio, dc_too_high};
     class Ppg {
     public:
       Ppg();
       int8_t Preprocess(uint16_t hrs, uint16_t als);
       int HeartRate();
       void Reset(bool resetDaqBuffer);
-      static constexpr int deltaTms = 100;
+      static constexpr int deltaTms = 25;
       // Daq dataLength: Must be power of 2
       static constexpr uint16_t dataLength = 64;
       static constexpr uint16_t spectrumLength = dataLength >> 1;
