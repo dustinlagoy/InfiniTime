@@ -4,12 +4,12 @@
 
 using namespace Pinetime::Controllers;
 
-void HeartRateController::Update(HeartRateController::States newState, uint8_t heartRate) {
+void HeartRateController::Update(HeartRateController::States newState, int heartRates[20]) {
   this->state = newState;
-  if (this->heartRate != heartRate) {
-    this->heartRate = heartRate;
-    service->OnNewHeartRateValue(heartRate);
-  }
+  // if (this->heartRate != heartRate) {
+  //   this->heartRate = heartRate;
+  // }
+  service->OnNewHeartRateValue(heartRates);
 }
 
 void HeartRateController::Start() {

@@ -77,6 +77,11 @@ void HeartRateTask::Work() {
         ambient = 1;
       }
       int bpm = heartRateSensor.ReadHrs();
+      int count = xTaskGetTickCount();
+      heartRateBuffer[i_buffer] = count;
+      i_buffer++;
+      heartRateBuffer[i_buffer] = bpm;
+      i_buffer++;
 
       // If ambient light detected or a reset requested (bpm < 0)
       if (ambient > 0) {
@@ -85,21 +90,26 @@ void HeartRateTask::Work() {
         // Force state to NotEnoughData (below)
         lastBpm = 0;
         bpm = 0;
-      } else if (bpm < 0) {
-        // Reset all DAQ buffers except HRS buffer
-        ppg.Reset(false);
-        // Set HR to zero and update
-        bpm = 0;
-        controller.Update(Controllers::HeartRateController::States::Running, bpm);
+      }
+      // } else if (bpm < 0) {
+      //   // Reset all DAQ buffers except HRS buffer
+      //   ppg.Reset(false);
+      //   // Set HR to zero and update
+      //   bpm = 0;
+      //   controller.Update(Controllers::HeartRateController::States::Running, bpm);
+      // }
+      if (i_buffer == 20) {
+        i_buffer = 0;
+        controller.Update(Controllers::HeartRateController::States::Running, heartRateBuffer);
       }
 
       if (lastBpm == 0 && bpm == 0) {
-        controller.Update(Controllers::HeartRateController::States::NotEnoughData, bpm);
+        // controller.Update(Controllers::HeartRateController::States::NotEnoughData, bpm);
       }
 
       if (bpm != 0) {
         lastBpm = bpm;
-        controller.Update(Controllers::HeartRateController::States::Running, lastBpm);
+        // controller.Update(Controllers::HeartRateController::States::Running, lastBpm);
       }
     }
   }
