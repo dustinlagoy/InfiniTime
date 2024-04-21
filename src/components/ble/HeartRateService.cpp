@@ -56,12 +56,12 @@ int HeartRateService::OnHeartRateRequested(uint16_t attributeHandle, ble_gatt_ac
   return 0;
 }
 
-void HeartRateService::OnNewHeartRateValue(uint8_t heartRateValue) {
+void HeartRateService::OnNewHeartRateValue(int heartRateValue[20]) {
   if (!heartRateMeasurementNotificationEnable)
     return;
 
-  uint8_t buffer[2] = {0, heartRateValue}; // [0] = flags, [1] = hr value
-  auto* om = ble_hs_mbuf_from_flat(buffer, 2);
+  // uint8_t buffer[2] = {0, heartRateValue}; // [0] = flags, [1] = hr value
+  auto* om = ble_hs_mbuf_from_flat(heartRateValue, 20*sizeof(int));
 
   uint16_t connectionHandle = nimble.connHandle();
 

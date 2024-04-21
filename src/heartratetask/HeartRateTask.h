@@ -36,6 +36,8 @@ namespace Pinetime {
       Controllers::HeartRateController& controller;
       Controllers::Ppg ppg;
       bool measurementStarted = false;
+      int heartRateBuffer[20];
+      int i_buffer = 0;
     };
 
   }

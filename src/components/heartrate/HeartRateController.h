@@ -20,7 +20,7 @@ namespace Pinetime {
       HeartRateController() = default;
       void Start();
       void Stop();
-      void Update(States newState, uint8_t heartRate);
+      void Update(States newState, int heartRates[20]);
 
       void SetHeartRateTask(Applications::HeartRateTask* task);
 
