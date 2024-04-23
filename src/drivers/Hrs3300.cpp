@@ -15,10 +15,6 @@
 
 using namespace Pinetime::Drivers;
 
-namespace {
-  static constexpr uint8_t ledDriveCurrentValue = 0x2f;
-}
-
 /** Driver for the HRS3300 heart rate sensor.
  * Original implementation from wasp-os : https://github.com/wasp-os/wasp-os/blob/master/wasp/drivers/hrs3300.py
  *
@@ -32,31 +28,23 @@ void Hrs3300::Init() {
 
   Disable();
   vTaskDelay(100);
-
-  // HRS disabled, 50ms wait time between ADC conversion period, current 12.5mA
-  WriteRegister(static_cast<uint8_t>(Registers::Enable), 0x50);
-
-  // Current 12.5mA and low nibble 0xF.
-  // Note: Setting low nibble to 0x8 per the datasheet results in
-  // modulated LED driver output. Setting to 0xF results in clean,
-  // steady output during the ADC conversion period.
-  WriteRegister(static_cast<uint8_t>(Registers::PDriver), ledDriveCurrentValue);
-
-  // HRS and ALS both in 15-bit mode results in ~50ms LED drive period
-  // and presumably ~50ms ADC conversion period.
-  WriteRegister(static_cast<uint8_t>(Registers::Res), 0x77);
-
-  // Gain set to 1x
-  WriteRegister(static_cast<uint8_t>(Registers::Hgain), 0x00);
+  Enable();
 }
 
 void Hrs3300::Enable() {
   NRF_LOG_INFO("ENABLE");
+  // set all settings registers now
+  SetWaitTime(WaitTime::ms_50);
+  SetPowerDrive(PowerDrive::mA_12_5);
+  // HRS and ALS both in 15-bit mode results in ~50ms LED drive period
+  // and presumably ~50ms ADC conversion period.
+  SetResolution(Resolution::bits_15);
+  // Gain set to 1x
+  SetGain(Gain::x_1);
+
   auto value = ReadRegister(static_cast<uint8_t>(Registers::Enable));
   value |= 0x80;
   WriteRegister(static_cast<uint8_t>(Registers::Enable), value);
-
-  WriteRegister(static_cast<uint8_t>(Registers::PDriver), ledDriveCurrentValue);
 }
 
 void Hrs3300::Disable() {
@@ -65,6 +53,7 @@ void Hrs3300::Disable() {
   value &= ~0x80;
   WriteRegister(static_cast<uint8_t>(Registers::Enable), value);
 
+  // turn power off completely
   WriteRegister(static_cast<uint8_t>(Registers::PDriver), 0);
 }
 
@@ -99,6 +88,40 @@ Hrs3300::PackedHrsAls Hrs3300::ReadHrsAls() {
   res.als = ((buf[h] & 0x3f) << 11) | (buf[m] << 3) | (buf[l] & 0x07);
 
   return res;
+}
+
+void Hrs3300::SetWaitTime(WaitTime wait) {
+  auto value = ReadRegister(static_cast<uint8_t>(Registers::Enable));
+  value |= static_cast<uint8_t>(wait) << 4;
+  WriteRegister(static_cast<uint8_t>(Registers::Enable), value);
+}
+
+void Hrs3300::SetPowerDrive(PowerDrive power) {
+  auto enable = ReadRegister(static_cast<uint8_t>(Registers::Enable));
+  uint8_t value = static_cast<uint8_t>(power);
+
+  // third enable bit is the second power bit
+  enable |= (value & 0x02) << 2;
+
+  uint8_t driver = driverMask;
+  // sixth driver bit is the first power bit
+  driver |= (value & 0x01) << 6;
+
+  WriteRegister(static_cast<uint8_t>(Registers::Enable), enable);
+  WriteRegister(static_cast<uint8_t>(Registers::PDriver), driver);
+}
+
+void Hrs3300::SetResolution(Resolution resolution) {
+  WriteRegister(
+    static_cast<uint8_t>(Registers::Res),
+    static_cast<uint8_t>(resolution) | resolutionMask
+  );
+}
+
+void Hrs3300::SetGain(Gain gain) {
+  WriteRegister(
+    static_cast<uint8_t>(Registers::Hgain), static_cast<uint8_t>(gain) << 2
+  );
 }
 
 void Hrs3300::WriteRegister(uint8_t reg, uint8_t data) {
