@@ -21,6 +21,54 @@ namespace Pinetime {
         Hgain = 0x17
       };
 
+      enum class WaitTime : uint8_t {
+        ms_800 = 0x00,
+        ms_400 = 0x01,
+        ms_200 = 0x02,
+        ms_100 = 0x03,
+        ms_75 = 0x04,
+        ms_50 = 0x05,
+        ms_12_5 = 0x06,
+        ms_0 = 0x07,
+      };
+
+      // this is current in milliamps but the register calls it power
+      enum class PowerDrive : uint8_t {
+        mA_12_5 = 0x00,
+        mA_20 = 0x01,
+        mA_30 = 0x02,
+        mA_40 = 0x03,
+      };
+
+      enum class Resolution : uint8_t {
+        bits_8 = 0x00,
+        bits_9 = 0x01,
+        bits_10 = 0x02,
+        bits_11 = 0x03,
+        bits_12 = 0x04,
+        bits_13 = 0x05,
+        bits_14 = 0x06,
+        bits_15 = 0x07,
+        bits_16 = 0x08,
+        bits_17 = 0x09,
+        bits_18 = 0x0a,
+      };
+
+      enum class Gain : uint8_t {
+        x_1 = 0x00,
+        x_2 = 0x01,
+        x_4 = 0x02,
+        x_8 = 0x03,
+        x_64 = 0x04,
+      };
+
+      // set most significant reserved bits to 0111
+      static constexpr uint8_t resolutionMask = 0x70;
+      // set least significant reserved bits to 0xF and power on bit (0x20) high
+      // Note: Setting low nibble to 0x8 per the datasheet results in
+      // modulated LED driver output. Setting to 0xF results in clean,
+      // steady output during the ADC conversion period.
+      static constexpr uint8_t driverMask = 0x2f;
       Hrs3300(TwiMaster& twiMaster, uint8_t twiAddress);
       Hrs3300(const Hrs3300&) = delete;
       Hrs3300& operator=(const Hrs3300&) = delete;
@@ -32,8 +80,10 @@ namespace Pinetime {
       void Disable();
       uint32_t ReadHrs();
       uint32_t ReadAls();
-      void SetGain(uint8_t gain);
-      void SetDrive(uint8_t drive);
+      void SetWaitTime(WaitTime wait);
+      void SetPowerDrive(PowerDrive power);
+      void SetResolution(Resolution resolution);
+      void SetGain(Gain gain);
 
     private:
       TwiMaster& twiMaster;
