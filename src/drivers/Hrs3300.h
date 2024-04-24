@@ -1,6 +1,7 @@
 #pragma once
 
 #include "drivers/TwiMaster.h"
+#include "components/fs/FS.h"
 
 namespace Pinetime {
   namespace Drivers {
@@ -62,14 +63,25 @@ namespace Pinetime {
         x_64 = 0x04,
       };
 
-      // set most significant reserved bits to 0111
-      static constexpr uint8_t resolutionMask = 0x70;
-      // set least significant reserved bits to 0xF and power on bit (0x20) high
-      // Note: Setting low nibble to 0x8 per the datasheet results in
-      // modulated LED driver output. Setting to 0xF results in clean,
-      // steady output during the ADC conversion period.
-      static constexpr uint8_t driverMask = 0x2f;
-      Hrs3300(TwiMaster& twiMaster, uint8_t twiAddress);
+      static constexpr uint8_t settingsVersion = 0x00;
+      struct Settings {
+        uint8_t version = settingsVersion;
+        WaitTime waitTime = WaitTime::ms_50;
+        PowerDrive powerDrive = PowerDrive::mA_12_5;
+        // HRS and ALS both in 15-bit mode results in ~50ms LED drive period
+        // and presumably ~50ms ADC conversion period.
+        Resolution resolution = Resolution::bits_15;
+        Gain gain = Gain::x_1;
+        // set most significant reserved bits to 0111
+        uint8_t resolutionMask = 0x70;
+        // set least significant reserved bits to 0xF and power on bit (0x20) high
+        // Note: Setting low nibble to 0x8 per the datasheet results in
+        // modulated LED driver output. Setting to 0xF results in clean,
+        // steady output during the ADC conversion period.
+        uint8_t driverMask = 0x2f;
+      };
+      Settings settings;
+      Hrs3300(TwiMaster& twiMaster, uint8_t twiAddress, Pinetime::Controllers::FS& fs);
       Hrs3300(const Hrs3300&) = delete;
       Hrs3300& operator=(const Hrs3300&) = delete;
       Hrs3300(Hrs3300&&) = delete;
@@ -88,9 +100,12 @@ namespace Pinetime {
     private:
       TwiMaster& twiMaster;
       uint8_t twiAddress;
+      Pinetime::Controllers::FS& fs;
 
       void WriteRegister(uint8_t reg, uint8_t data);
       uint8_t ReadRegister(uint8_t reg);
+      void LoadSettingsFromFile();
+      void SaveSettingsToFile();
     };
   }
 }

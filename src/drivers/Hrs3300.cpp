@@ -19,11 +19,12 @@ using namespace Pinetime::Drivers;
  *
  * Experimentaly derived changes to improve signal/noise (see comments below) - Ceimour
  */
-Hrs3300::Hrs3300(TwiMaster& twiMaster, uint8_t twiAddress) : twiMaster {twiMaster}, twiAddress {twiAddress} {
+Hrs3300::Hrs3300(TwiMaster& twiMaster, uint8_t twiAddress, Pinetime::Controllers::FS& fs) : twiMaster {twiMaster}, twiAddress {twiAddress}, fs {fs} {
 }
 
 void Hrs3300::Init() {
   nrf_gpio_cfg_input(30, NRF_GPIO_PIN_NOPULL);
+  LoadSettingsFromFile();
 
   Disable();
   vTaskDelay(100);
@@ -32,14 +33,12 @@ void Hrs3300::Init() {
 
 void Hrs3300::Enable() {
   NRF_LOG_INFO("ENABLE");
+  LoadSettingsFromFile();
   // set all settings registers now
-  SetWaitTime(WaitTime::ms_50);
-  SetPowerDrive(PowerDrive::mA_12_5);
-  // HRS and ALS both in 15-bit mode results in ~50ms LED drive period
-  // and presumably ~50ms ADC conversion period.
-  SetResolution(Resolution::bits_15);
-  // Gain set to 1x
-  SetGain(Gain::x_1);
+  SetWaitTime(settings.waitTime);
+  SetPowerDrive(settings.powerDrive);
+  SetResolution(settings.resolution);
+  SetGain(settings.gain);
 
   auto value = ReadRegister(static_cast<uint8_t>(Registers::Enable));
   value |= 0x80;
@@ -83,7 +82,7 @@ void Hrs3300::SetPowerDrive(PowerDrive power) {
   // third enable bit is the second power bit
   enable |= (value & 0x02) << 2;
 
-  uint8_t driver = driverMask;
+  uint8_t driver = settings.driverMask;
   // sixth driver bit is the first power bit
   driver |= (value & 0x01) << 6;
 
@@ -94,7 +93,7 @@ void Hrs3300::SetPowerDrive(PowerDrive power) {
 void Hrs3300::SetResolution(Resolution resolution) {
   WriteRegister(
     static_cast<uint8_t>(Registers::Res),
-    static_cast<uint8_t>(resolution) | resolutionMask
+    static_cast<uint8_t>(resolution) | settings.resolutionMask
   );
 }
 
@@ -116,4 +115,28 @@ uint8_t Hrs3300::ReadRegister(uint8_t reg) {
   if (ret != TwiMaster::ErrorCodes::NoError)
     NRF_LOG_INFO("READ ERROR");
   return value;
+}
+
+void Hrs3300::LoadSettingsFromFile() {
+  Settings bufferSettings;
+  lfs_file_t settingsFile;
+
+  if (fs.FileOpen(&settingsFile, "/hrs_settings.dat", LFS_O_RDONLY) != LFS_ERR_OK) {
+    return;
+  }
+  fs.FileRead(&settingsFile, reinterpret_cast<uint8_t*>(&bufferSettings), sizeof(settings));
+  fs.FileClose(&settingsFile);
+  if (bufferSettings.version == settingsVersion) {
+    settings = bufferSettings;
+  }
+}
+
+void Hrs3300::SaveSettingsToFile() {
+  lfs_file_t settingsFile;
+
+  if (fs.FileOpen(&settingsFile, "/hrs_settings.dat", LFS_O_WRONLY | LFS_O_CREAT) != LFS_ERR_OK) {
+    return;
+  }
+  fs.FileWrite(&settingsFile, reinterpret_cast<uint8_t*>(&settings), sizeof(settings));
+  fs.FileClose(&settingsFile);
 }
