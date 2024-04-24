@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <components/ble/HeartRateService.h>
+#include <drivers/Hrs3300.h>
 
 namespace Pinetime {
   namespace Applications {
@@ -16,8 +17,9 @@ namespace Pinetime {
     class HeartRateController {
     public:
       enum class States { Stopped, NotEnoughData, NoTouch, Running };
+      Drivers::Hrs3300& heartRateSensor;
 
-      HeartRateController() = default;
+      explicit HeartRateController(Drivers::Hrs3300& heartRateSensor);
       void Start();
       void Stop();
       void Update(States newState, int heartRates[20]);

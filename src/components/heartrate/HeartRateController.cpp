@@ -4,6 +4,10 @@
 
 using namespace Pinetime::Controllers;
 
+HeartRateController::HeartRateController(Drivers::Hrs3300& heartRateSensor)
+  : heartRateSensor {heartRateSensor} {
+}
+
 void HeartRateController::Update(HeartRateController::States newState, int heartRates[20]) {
   this->state = newState;
   // if (this->heartRate != heartRate) {
