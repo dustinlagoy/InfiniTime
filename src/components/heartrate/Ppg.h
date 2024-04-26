@@ -18,7 +18,7 @@ namespace Pinetime {
       int8_t Preprocess(uint16_t hrs, uint16_t als);
       int HeartRate();
       void Reset(bool resetDaqBuffer);
-      static constexpr int deltaTms = 25;
+      static constexpr int deltaTms = 40;
       // Daq dataLength: Must be power of 2
       static constexpr uint16_t dataLength = 64;
       static constexpr uint16_t spectrumLength = dataLength >> 1;
