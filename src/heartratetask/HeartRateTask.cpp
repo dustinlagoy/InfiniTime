@@ -32,7 +32,7 @@ void HeartRateTask::Work() {
       if (measurementStarted) {
         delay = ppg.deltaTms;
       } else {
-        delay = 25;
+        delay = 100;
       }
     } else {
       delay = portMAX_DELAY;
@@ -124,11 +124,11 @@ void HeartRateTask::PushMessage(HeartRateTask::Messages msg) {
 void HeartRateTask::StartMeasurement() {
   heartRateSensor.Enable();
   ppg.Reset(true);
-  vTaskDelay(25);
+  vTaskDelay(100);
 }
 
 void HeartRateTask::StopMeasurement() {
   heartRateSensor.Disable();
   ppg.Reset(true);
-  vTaskDelay(25);
+  vTaskDelay(100);
 }

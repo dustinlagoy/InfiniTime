@@ -66,7 +66,7 @@ HeartRate::HeartRate(Controllers::HeartRateController& heartRateController, Syst
     systemTask.PushMessage(Pinetime::System::Messages::DisableSleeping);
   }
 
-  taskRefresh = lv_task_create(RefreshTaskCallback, 25, LV_TASK_PRIO_MID, this);
+  taskRefresh = lv_task_create(RefreshTaskCallback, 100, LV_TASK_PRIO_MID, this);
 }
 
 HeartRate::~HeartRate() {
