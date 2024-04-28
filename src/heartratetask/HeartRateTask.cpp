@@ -1,12 +1,13 @@
 #include "heartratetask/HeartRateTask.h"
 #include <drivers/Hrs3300.h>
 #include <components/heartrate/HeartRateController.h>
+#include <components/motion/MotionController.h>
 #include <nrf_log.h>
 
 using namespace Pinetime::Applications;
 
-HeartRateTask::HeartRateTask(Drivers::Hrs3300& heartRateSensor, Controllers::HeartRateController& controller)
-  : heartRateSensor {heartRateSensor}, controller {controller} {
+HeartRateTask::HeartRateTask(Drivers::Hrs3300& heartRateSensor, Controllers::HeartRateController& controller, Controllers::MotionController& motion)
+  : heartRateSensor {heartRateSensor}, controller {controller}, motion {motion} {
 }
 
 void HeartRateTask::Start() {
@@ -74,7 +75,8 @@ void HeartRateTask::Work() {
       // int8_t ambient = ppg.Preprocess(sensorData.hrs, sensorData.als);
       // int bpm = ppg.HeartRate();
       int8_t ambient = 0;
-      if (sensorData.als > 1000) {
+      int als = sensorData.als;
+      if (als > 1000) {
         ambient = 1;
       }
       int bpm = sensorData.hrs;
@@ -82,6 +84,14 @@ void HeartRateTask::Work() {
       heartRateBuffer[i_buffer] = count;
       i_buffer++;
       heartRateBuffer[i_buffer] = bpm;
+      i_buffer++;
+      heartRateBuffer[i_buffer] = als;
+      i_buffer++;
+      heartRateBuffer[i_buffer] = motion.X();
+      i_buffer++;
+      heartRateBuffer[i_buffer] = motion.Y();
+      i_buffer++;
+      heartRateBuffer[i_buffer] = motion.Z();
       i_buffer++;
 
       // If ambient light detected or a reset requested (bpm < 0)
@@ -99,7 +109,7 @@ void HeartRateTask::Work() {
       //   bpm = 0;
       //   controller.Update(Controllers::HeartRateController::States::Running, bpm);
       // }
-      if (i_buffer == 20) {
+      if (i_buffer == 60) {
         i_buffer = 0;
         controller.Update(Controllers::HeartRateController::States::Running, heartRateBuffer);
       }

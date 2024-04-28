@@ -22,7 +22,7 @@ namespace Pinetime {
       explicit HeartRateController(Drivers::Hrs3300& heartRateSensor);
       void Start();
       void Stop();
-      void Update(States newState, int heartRates[20]);
+      void Update(States newState, int heartRates[60]);
 
       void SetHeartRateTask(Applications::HeartRateTask* task);
 
