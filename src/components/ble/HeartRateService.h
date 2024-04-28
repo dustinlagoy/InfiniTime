@@ -16,7 +16,7 @@ namespace Pinetime {
       HeartRateService(NimbleController& nimble, Controllers::HeartRateController& heartRateController);
       void Init();
       int OnHeartRateRequested(uint16_t attributeHandle, ble_gatt_access_ctxt* context);
-      void OnNewHeartRateValue(int hearRateValues[20]);
+      void OnNewHeartRateValue(int hearRateValues[60]);
 
       void SubscribeNotification(uint16_t attributeHandle);
       void UnsubscribeNotification(uint16_t attributeHandle);

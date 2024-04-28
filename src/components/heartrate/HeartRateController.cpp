@@ -8,7 +8,7 @@ HeartRateController::HeartRateController(Drivers::Hrs3300& heartRateSensor)
   : heartRateSensor {heartRateSensor} {
 }
 
-void HeartRateController::Update(HeartRateController::States newState, int heartRates[20]) {
+void HeartRateController::Update(HeartRateController::States newState, int heartRates[60]) {
   this->state = newState;
   // if (this->heartRate != heartRate) {
   //   this->heartRate = heartRate;
