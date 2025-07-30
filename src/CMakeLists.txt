@@ -486,6 +486,7 @@ list(APPEND SOURCE_FILES
         heartratetask/HeartRateTask.cpp
         components/heartrate/HeartRateController.cpp
         components/heartrate/Ppg.cpp
+        components/heartrate/Recorder.cpp
 
         buttonhandler/ButtonHandler.cpp
         touchhandler/TouchHandler.cpp
@@ -551,6 +552,7 @@ list(APPEND RECOVERY_SOURCE_FILES
         components/heartrate/HeartRateController.cpp
         heartratetask/HeartRateTask.cpp
         components/heartrate/Ppg.cpp
+        components/heartrate/Recorder.cpp
 
         components/motor/MotorController.cpp
         components/fs/FS.cpp
@@ -669,6 +671,7 @@ set(INCLUDE_FILES
         drivers/TwiMaster.h
         heartratetask/HeartRateTask.h
         components/heartrate/Ppg.h
+        components/heartrate/Recorder.h
         components/heartrate/HeartRateController.h
         libs/arduinoFFT/src/arduinoFFT.h
         libs/arduinoFFT/src/defs.h

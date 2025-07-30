@@ -3,6 +3,7 @@
 #include <task.h>
 #include <queue.h>
 #include <components/heartrate/Ppg.h>
+#include <components/heartrate/Recorder.h>
 
 namespace Pinetime {
   namespace Drivers {
@@ -36,10 +37,9 @@ namespace Pinetime {
       Drivers::Hrs3300& heartRateSensor;
       Controllers::HeartRateController& controller;
       Controllers::MotionController& motion;
-      Controllers::Ppg ppg;
+      // Controllers::Ppg processor;
+      Controllers::HeartRecorder processor;
       bool measurementStarted = false;
-      int heartRateBuffer[60];
-      int i_buffer = 0;
     };
 
   }

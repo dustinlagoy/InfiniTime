@@ -142,7 +142,12 @@ Ppg::Ppg() {
   spectrum.fill(0.0f);
 }
 
-int8_t Ppg::Preprocess(uint16_t hrs, uint16_t als) {
+int8_t Ppg::Preprocess(uint16_t hrs, uint16_t als, int16_t _x, int16_t _y, int16_t _z) {
+  // silence unused parameter warning
+  (void) _x;
+  (void) _y;
+  (void) _z;
+
   if (dataIndex < dataLength) {
     dataHRS[dataIndex++] = hrs;
   }

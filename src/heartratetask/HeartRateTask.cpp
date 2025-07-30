@@ -31,7 +31,7 @@ void HeartRateTask::Work() {
     uint32_t delay;
     if (state == States::Running) {
       if (measurementStarted) {
-        delay = ppg.deltaTms;
+        delay = processor.deltaTms;
       } else {
         delay = 100;
       }
@@ -72,55 +72,33 @@ void HeartRateTask::Work() {
 
     if (measurementStarted) {
       auto sensorData = heartRateSensor.ReadHrsAls();
-      // int8_t ambient = ppg.Preprocess(sensorData.hrs, sensorData.als);
-      // int bpm = ppg.HeartRate();
-      int8_t ambient = 0;
-      int als = sensorData.als;
-      if (als > 1000) {
-        ambient = 1;
-      }
-      int bpm = sensorData.hrs;
-      int count = xTaskGetTickCount();
-      heartRateBuffer[i_buffer] = count;
-      i_buffer++;
-      heartRateBuffer[i_buffer] = bpm;
-      i_buffer++;
-      heartRateBuffer[i_buffer] = als;
-      i_buffer++;
-      heartRateBuffer[i_buffer] = motion.X();
-      i_buffer++;
-      heartRateBuffer[i_buffer] = motion.Y();
-      i_buffer++;
-      heartRateBuffer[i_buffer] = motion.Z();
-      i_buffer++;
+      int8_t should_reset = processor.Preprocess(
+        sensorData.hrs, sensorData.als, motion.X(), motion.Y(), motion.Z()
+      );
+      int bpm = processor.HeartRate();
 
       // If ambient light detected or a reset requested (bpm < 0)
-      if (ambient > 0) {
+      if (should_reset > 0) {
         // Reset all DAQ buffers
-        ppg.Reset(true);
+        processor.Reset(true);
         // Force state to NotEnoughData (below)
         lastBpm = 0;
         bpm = 0;
-      }
-      // } else if (bpm < 0) {
-      //   // Reset all DAQ buffers except HRS buffer
-      //   ppg.Reset(false);
-      //   // Set HR to zero and update
-      //   bpm = 0;
-      //   controller.Update(Controllers::HeartRateController::States::Running, bpm);
-      // }
-      if (i_buffer == 60) {
-        i_buffer = 0;
-        controller.Update(Controllers::HeartRateController::States::Running, heartRateBuffer);
+      } else if (bpm < 0) {
+        // Reset all DAQ buffers except HRS buffer
+        processor.Reset(false);
+        // Set HR to zero and update
+        bpm = 0;
+        controller.Update(Controllers::HeartRateController::States::Running, bpm);
       }
 
       if (lastBpm == 0 && bpm == 0) {
-        // controller.Update(Controllers::HeartRateController::States::NotEnoughData, bpm);
+        controller.Update(Controllers::HeartRateController::States::NotEnoughData, bpm);
       }
 
       if (bpm != 0) {
         lastBpm = bpm;
-        // controller.Update(Controllers::HeartRateController::States::Running, lastBpm);
+        controller.Update(Controllers::HeartRateController::States::Running, lastBpm);
       }
     }
   }
@@ -134,12 +112,12 @@ void HeartRateTask::PushMessage(HeartRateTask::Messages msg) {
 
 void HeartRateTask::StartMeasurement() {
   heartRateSensor.Enable();
-  ppg.Reset(true);
+  processor.Reset(true);
   vTaskDelay(100);
 }
 
 void HeartRateTask::StopMeasurement() {
   heartRateSensor.Disable();
-  ppg.Reset(true);
+  processor.Reset(true);
   vTaskDelay(100);
 }
