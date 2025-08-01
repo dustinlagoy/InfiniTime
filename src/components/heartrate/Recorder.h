@@ -12,9 +12,6 @@ namespace Pinetime {
       int HeartRate();
       void Reset(bool resetDaqBuffer);
       static constexpr int deltaTms = 40;
-      // Daq dataLength: Must be power of 2
-      static constexpr uint16_t dataLength = 64;
-      static constexpr uint16_t spectrumLength = dataLength >> 1;
     private:
       Pinetime::Controllers::FS& fs;
       uint32_t offset = 0;

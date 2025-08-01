@@ -108,7 +108,7 @@ Pinetime::Controllers::ButtonHandler buttonHandler;
 Pinetime::Controllers::BrightnessController brightnessController {};
 
 Pinetime::Controllers::HeartRateController heartRateController(heartRateSensor);
-Pinetime::Applications::HeartRateTask heartRateApp(heartRateSensor, heartRateController, motionController);
+Pinetime::Applications::HeartRateTask heartRateApp(heartRateSensor, heartRateController, motionController, fs);
 
 Pinetime::Applications::DisplayApp displayApp(lcd,
                                               touchPanel,

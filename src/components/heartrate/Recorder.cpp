@@ -30,29 +30,26 @@ int8_t HeartRecorder::Preprocess(uint16_t hrs, uint16_t als, int16_t x, int16_t 
     return 0;
   }
 
-  result = fs.FileOpen(&file, filename, LFS_O_WRONLY);
-  if (result != LFS_ERR_OK) {
-    return 0;
+  result = fs.FileOpen(&file, filename, LFS_O_RDWR | LFS_O_CREAT);
+  if (result == LFS_ERR_OK) {
+    result = fs.FileSeek(&file, offset);
+    if (result >= 0) {
+      result = fs.FileWrite(&file, reinterpret_cast<uint8_t*>(&to_write), sizeof(to_write));
+    }
+  }
+  fs.FileClose(&file);
+  if (result < 0) {
+    return result * -1;
   }
 
-  result = fs.FileSeek(&file, offset);
-  if (result != LFS_ERR_OK) {
-    return 0;
-  }
-
-  result = fs.FileWrite(&file, reinterpret_cast<uint8_t*>(&to_write), sizeof(HeartDump));
-  if (result != LFS_ERR_OK) {
-    return 0;
-  }
-
-  offset += sizeof(HeartDump);
+  offset += sizeof(to_write);
   return 0;
 }
 
 int HeartRecorder::HeartRate() {
   uint32_t entries = offset / sizeof(HeartDump);
   if (entries % 64 == 0) {
-    return entries;
+    return entries/64;
   }
   return 0;
 }

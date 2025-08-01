@@ -6,8 +6,17 @@
 
 using namespace Pinetime::Applications;
 
-HeartRateTask::HeartRateTask(Drivers::Hrs3300& heartRateSensor, Controllers::HeartRateController& controller, Controllers::MotionController& motion)
-  : heartRateSensor {heartRateSensor}, controller {controller}, motion {motion} {
+HeartRateTask::HeartRateTask(
+  Drivers::Hrs3300& heartRateSensor,
+  Controllers::HeartRateController& controller,
+  Controllers::MotionController& motion,
+  Pinetime::Controllers::FS& fs
+) :
+  heartRateSensor {heartRateSensor},
+  controller {controller},
+  motion {motion},
+  processor(fs)
+{
 }
 
 void HeartRateTask::Start() {
@@ -72,25 +81,28 @@ void HeartRateTask::Work() {
 
     if (measurementStarted) {
       auto sensorData = heartRateSensor.ReadHrsAls();
-      int8_t should_reset = processor.Preprocess(
+      int8_t error = processor.Preprocess(
         sensorData.hrs, sensorData.als, motion.X(), motion.Y(), motion.Z()
       );
       int bpm = processor.HeartRate();
+      if (bpm <= 0) {
+        bpm = error;
+      }
 
       // If ambient light detected or a reset requested (bpm < 0)
-      if (should_reset > 0) {
-        // Reset all DAQ buffers
-        processor.Reset(true);
-        // Force state to NotEnoughData (below)
-        lastBpm = 0;
-        bpm = 0;
-      } else if (bpm < 0) {
-        // Reset all DAQ buffers except HRS buffer
-        processor.Reset(false);
-        // Set HR to zero and update
-        bpm = 0;
-        controller.Update(Controllers::HeartRateController::States::Running, bpm);
-      }
+      // if (should_reset > 0) {
+      //   // Reset all DAQ buffers
+      //   processor.Reset(true);
+      //   // Force state to NotEnoughData (below)
+      //   lastBpm = 0;
+      //   bpm = 0;
+      // } else if (bpm < 0) {
+      //   // Reset all DAQ buffers except HRS buffer
+      //   processor.Reset(false);
+      //   // Set HR to zero and update
+      //   bpm = 0;
+      //   controller.Update(Controllers::HeartRateController::States::Running, bpm);
+      // }
 
       if (lastBpm == 0 && bpm == 0) {
         controller.Update(Controllers::HeartRateController::States::NotEnoughData, bpm);
